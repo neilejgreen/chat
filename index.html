@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chat</title>
+		<script src='/socket.io/socket.io.js' ></script>
+		<script src='http://code.jquery.com/jquery-1.10.1.min.js'></script>
+		<script>
+
+			$(function(){
+
+				var addChatLog = function(message, cssclass){
+					var chatMessage = $('<p/>').attr('class', cssclass).text(message);
+					$('#chat-board').append(chatMessage);
+				};
+
+				var updateRoster = function(members){
+					var roster = $('#roster ul');
+					roster.empty();
+					members.forEach(function(member){
+						roster.append($('<li/>').text(member));
+					});
+				}
+
+				$('#chat-form').submit(function(){
+					var message = $('#chat-in').val();
+					$('#chat-in').val('');
+
+					socket.emit('chatto', message);
+					return false;
+				});
+
+				var socket = io.connect('http://localhost:8080/');
+
+				socket.emit('join', {name:prompt('name?')});
+
+				socket.on('chatfrom', function(data){
+					var message = ''.concat(data.name, ' says: ', data.message);
+					addChatLog(message);
+				});
+
+				socket.on('status', function(data){
+					addChatLog(data.message, 'status');
+				});
+
+				socket.on('roster', updateRoster);
+
+				$('#chat-in').focus();
+			});
+		</script>
+		<style type='text/css'>
+			body, input{
+				font-size: 20pt;
+				font-family: verdana;
+			}
+
+			#welcome{
+				float: left;
+			}
+
+			#chat-board{
+				clear:left;
+			}
+
+			#roster{
+				float:right;
+			}
+
+			#roster ul{
+				list-style: none;
+			}
+
+			#chat-in{
+				border:none;
+				outline:none;
+				position:fixed;
+				bottom:0;
+				width: 100%;
+				display:block;
+			}
+
+			.status{
+				color:#555;
+				font-size: 60%;
+			}
+		</style>
+	</head>
+	<body>
+		<p id='welcome'>Hello Socket IO</p>
+		<div id='roster'>
+			<p>Who's here?</p>
+			<ul />
+		</div>
+		<div id='chat-board'></div>
+		<form id='chat-form'>
+			<input id='chat-in' placeholder='say something...'/>
+		</form>
+	</body>
+</html>
