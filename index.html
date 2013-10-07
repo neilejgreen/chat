@@ -4,13 +4,26 @@
 		<title>Chat</title>
 		<script src='/socket.io/socket.io.js' ></script>
 		<script src='http://code.jquery.com/jquery-1.10.1.min.js'></script>
+		<script src='http://code.jquery.com/color/jquery.color-2.1.0.min.js'></script>
 		<script>
 
 			$(function(){
 
-				var addChatLog = function(message, cssclass){
-					var chatMessage = $('<p/>').attr('class', cssclass).text(message);
+				var addChatLog = function(message, cssClass, suppressAttention){
+					var chatMessage = $('<p/>').text(message);
+					if(cssClass){
+						chatMessage.attr('class', cssClass);
+					}
 					$('#chat-board').append(chatMessage);
+					if(!suppressAttention){
+						chatMessage.css({"background-color":"#FF7F00"});
+						chatMessage.animate({"background-color":"#FFFFFF"}, 2000);
+					}
+				};
+
+				var addMessageFrom = function(data, suppressAttention){
+					var message = ''.concat(data.name, ' says: ', data.message);
+					addChatLog(message, null, suppressAttention);
 				};
 
 				var updateRoster = function(members){
@@ -19,7 +32,11 @@
 					members.forEach(function(member){
 						roster.append($('<li/>').text(member));
 					});
-				}
+				};
+
+				var scrollToBottom = function(){
+					$('body').animate({scrollTop:  $('body')[0].scrollHeight}, 250);
+				};
 
 				$('#chat-form').submit(function(){
 					var message = $('#chat-in').val();
@@ -34,8 +51,8 @@
 				socket.emit('join', {name:prompt('name?')});
 
 				socket.on('chatfrom', function(data){
-					var message = ''.concat(data.name, ' says: ', data.message);
-					addChatLog(message);
+					addMessageFrom(data); 
+					scrollToBottom();
 				});
 
 				socket.on('status', function(data){
@@ -43,6 +60,13 @@
 				});
 
 				socket.on('roster', updateRoster);
+
+				socket.on('catchup', function(messages){
+					messages.forEach(function(message){
+						addMessageFrom(message, true);
+					});
+					scrollToBottom();
+				});
 
 				$('#chat-in').focus();
 			});
@@ -54,28 +78,50 @@
 			}
 
 			#welcome{
-				float: left;
+				position:fixed;
+				top:0;
+				z-index: 100;
+				margin:0px;
+				line-height: 100px;
+				height:100px;
+				width:100%;
+				background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(255,255,255,1) 80%,rgba(255,255,255,0) 100%); 
 			}
 
 			#chat-board{
-				clear:left;
+				padding-bottom:50px;
+				padding-top:100px;
+				font-size: 60%;
 			}
 
 			#roster{
-				float:right;
+				position:fixed;
+				right:0px;
+				z-index: 150;
 			}
 
 			#roster ul{
 				list-style: none;
 			}
 
-			#chat-in{
-				border:none;
-				outline:none;
+			#chat-form{
 				position:fixed;
 				bottom:0;
 				width: 100%;
+				margin:0px;
 				display:block;
+				height:50px;
+				background: linear-gradient(to top, rgba(255,255,255,1) 0%,rgba(255,255,255,1) 80%,rgba(255,255,255,0) 100%); 
+			}
+
+			#chat-in{
+				border:none;
+				outline:none;
+				width:100%;
+				margin:0px;
+				display:block;
+				position: inherit;
+				bottom:0;
 			}
 
 			.status{

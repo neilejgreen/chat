@@ -17,8 +17,10 @@ var createChatApp = function(io){
 				chatRoster.addMember(nickname);
 				io.sockets.emit('roster', chatRoster.getMembers());
 
-				var loggedMessages = log.getHistory();
-				client.emit('catchup', loggedMessages);
+				var loggedMessages = log.getHistory(function(loggedMessages){
+					client.emit('catchup', loggedMessages);
+				});
+
 			},
 
 			disconnect:function(){
@@ -30,12 +32,9 @@ var createChatApp = function(io){
 			},
 
 			'chatto': function(data){
-
-
 				client.get('nickname', function(err, name){
-					var message = {name:name, message:data};
+					var message = {name:name, message:data, timestamp : +new Date()};
 					io.sockets.emit('chatfrom', message);
-
 					log.logMessage(message);
 
 				});
