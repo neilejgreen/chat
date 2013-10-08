@@ -1,8 +1,8 @@
 var _ = require('underscore');
 var roster = require('./roster');
-var messagelog = require('./messagelog');
+var chatlog = require('./chatlog');
 
-var log = messagelog.createLog();
+var log = chatlog.createLog();
 
 var createChatApp = function(io){
 
@@ -13,7 +13,8 @@ var createChatApp = function(io){
 			join:function(data){
 				var nickname = data.name;
 				client.set('nickname', nickname);
-				client.broadcast.emit('status', {message:"".concat(nickname, " joined the chat")});
+				var message = {message:"".concat(nickname, " joined the chat"), type:"status"};
+				client.broadcast.emit('status', message);
 				chatRoster.addMember(nickname);
 				io.sockets.emit('roster', chatRoster.getMembers());
 
@@ -25,7 +26,9 @@ var createChatApp = function(io){
 
 			disconnect:function(){
 				client.get("nickname", function(err, nickname){
-					client.broadcast.emit('status', {message:"".concat(nickname, " has left the chat")});
+					var message = {message:"".concat(nickname, " has left the chat"), type:"status"};
+					//log.logMessage(message);
+					client.broadcast.emit('status', message);
 					chatRoster.removeMember(nickname);
 					io.sockets.emit('roster', chatRoster.getMembers());
 				});

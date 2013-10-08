@@ -1,4 +1,4 @@
-var log = require('./messagelog').createLog();
+var log = require('./chatlog').createLog();
 
 
 log.logMessage({name:'Test', message:'BOOM!', timestamp : + new Date()});

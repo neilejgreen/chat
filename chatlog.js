@@ -18,6 +18,9 @@ var createLog = function(maxlength){
 	};
 
 	var logMessage = function(message){
+		if(!message.timestamp){
+			message.timestamp = + new Date();
+		}
 		var messageJson = JSON.stringify(message);
 		client.lpush('messages', messageJson, function(err, newLength){
 			client.ltrim('messages', 0, maxlength -1 );
